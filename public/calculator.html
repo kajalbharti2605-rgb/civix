@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Civix — Material Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .page{max-width:760px; margin:0 auto; padding:28px 20px 80px;}
+  .page h1{font-family:'Oswald',sans-serif; font-size:26px; margin:0 0 4px;}
+  .lead{color:var(--ink-600); font-size:14px; margin:0 0 20px;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .calc-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:var(--shadow-card); margin-bottom:16px;}
+  .fields{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
+  .calc-card label{display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:var(--ink-600);}
+  .calc-card input, .calc-card select{border:1px solid var(--line); border-radius:10px; padding:11px 12px; font-size:14px; background:var(--blueprint-50); font-family:inherit;}
+  table.res{width:100%; border-collapse:collapse; font-size:14px;}
+  .res td{padding:10px 4px; border-bottom:1px solid var(--blueprint-100);}
+  .res td:last-child{text-align:right;}
+  .calc-note{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-600); background:var(--blueprint-100); border-radius:8px; padding:8px 10px; margin-bottom:10px;}
+  .fine{color:var(--ink-400); font-size:12px; line-height:1.6; margin:12px 0 0;}
+  @media(max-width:520px){.fields{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__grid"></div>
+  <div class="topbar__inner">
+    <a href="/" class="brand" style="text-decoration:none;">
+      <span class="brand__mark">CIVIX</span>
+      <span class="brand__tag">Construction Marketplace</span>
+    </a>
+    <a href="/" class="btn btn--ghost-light" style="text-decoration:none;">← Home</a>
+  </div>
+</header>
+
+<main class="page">
+  <h1>Material Calculator</h1>
+  <p class="lead">Apne kaam ka size daalo, kitna material lagega uska andaza lo, aur seedha vendors se quote mangwao.</p>
+
+  <div class="chips">
+    <button class="chip is-active" data-mode="rcc">🏗️ Slab / Beam / Column</button>
+    <button class="chip" data-mode="brick">🧱 Brick wall</button>
+    <button class="chip" data-mode="plaster">🪣 Plastering</button>
+  </div>
+
+  <div class="calc-card">
+    <div class="fields" id="fields"></div>
+    <label>Wastage allowance (%)
+      <input id="waste" type="number" min="0" step="any" value="5">
+    </label>
+  </div>
+
+  <div class="calc-card">
+    <div class="calc-note" id="note"></div>
+    <table class="res"><tbody id="result"></tbody></table>
+    <button class="btn btn--primary btn--block" id="postBtn" style="margin-top:16px;">Post these as requirement →</button>
+    <p class="fine">Ye sirf andaza hai (standard thumb rules: M20 concrete 1:1.5:3, 1 bag = 50 kg). Final quantity apne engineer ya mistri se confirm karo, aur brand ya diameter RFQ form me badal sakte ho.</p>
+  </div>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const BAG = 0.0347;                         // 1 bag (50 kg) cement ≈ 0.0347 m³
+const FT = 0.3048, IN = 0.0254, SQFT = 0.092903;
+const up = (n, d = 0) => { const f = 10 ** d; return Math.ceil(n * f - 1e-9) / f; };
+
+const MODES = {
+  rcc: {
+    fields: [
+      { id: "l", label: "Length (ft)", v: 20 },
+      { id: "w", label: "Width (ft)", v: 15 },
+      { id: "t", label: "Thickness (inch)", v: 5 },
+      { id: "s", label: "Steel (kg per m³ concrete)", v: 80 },
+    ],
+    calc(v) {
+      const vol = v.l * FT * v.w * FT * v.t * IN;   // m³
+      const dry = vol * 1.54;                         // dry volume, M20 = 1:1.5:3
+      return {
+        note: `Concrete ≈ ${vol.toFixed(2)} m³ (M20 mix 1:1.5:3)`,
+        items: [
+          { name: "OPC 53 Grade Cement", qty: dry / 5.5 / BAG, unit: "Bags", round: 0 },
+          { name: "Sand (river / M-sand)", qty: dry * 1.5 / 5.5, unit: "Cum", round: 2 },
+          { name: "Aggregate 20mm", qty: dry * 3 / 5.5, unit: "Cum", round: 2 },
+          { name: "TMT Bars Fe500D 12mm", qty: vol * v.s / 1000, unit: "MT", round: 3 },
+        ],
+      };
+    },
+  },
+  brick: {
+    fields: [
+      { id: "l", label: "Wall length (ft)", v: 40 },
+      { id: "h", label: "Wall height (ft)", v: 10 },
+      { id: "o", label: "Door/window area to deduct (sq ft)", v: 0 },
+      { id: "t", label: "Wall thickness", type: "select", v: "0.23",
+        opts: [["0.115", "4.5 inch (half brick)"], ["0.23", "9 inch (full brick)"]] },
+    ],
+    calc(v) {
+      const area = Math.max(v.l * v.h - v.o, 0) * SQFT;   // m²
+      const vol = area * v.t;                              // m³ brickwork
+      const dry = vol * 0.23 * 1.33;                       // dry mortar, 1:6
+      return {
+        note: `Brickwork ≈ ${vol.toFixed(2)} m³ (cement mortar 1:6)`,
+        items: [
+          { name: "Red clay bricks", qty: vol * 500, unit: "Nos", round: 0 },
+          { name: "PPC Cement", qty: dry / 7 / BAG, unit: "Bags", round: 0 },
+          { name: "Sand (river / M-sand)", qty: dry * 6 / 7, unit: "Cum", round: 2 },
+        ],
+      };
+    },
+  },
+  plaster: {
+    fields: [
+      { id: "a", label: "Area to plaster (sq ft)", v: 1000 },
+      { id: "t", label: "Thickness", type: "select", v: "0.012",
+        opts: [["0.012", "12 mm (inner wall)"], ["0.015", "15 mm"], ["0.020", "20 mm (outer wall)"]] },
+      { id: "r", label: "Mix (cement : sand)", type: "select", v: "6",
+        opts: [["4", "1 : 4"], ["6", "1 : 6"]] },
+    ],
+    calc(v) {
+      const dry = v.a * SQFT * v.t * 1.27;
+      return {
+        note: `Plaster mortar ≈ ${dry.toFixed(2)} m³ dry (1:${v.r})`,
+        items: [
+          { name: "PPC Cement", qty: dry / (1 + v.r) / BAG, unit: "Bags", round: 0 },
+          { name: "Sand (plaster grade)", qty: dry * v.r / (1 + v.r), unit: "Cum", round: 2 },
+        ],
+      };
+    },
+  },
+};
+
+let mode = "rcc";
+let current = [];
+
+function renderForm() {
+  $("#fields").innerHTML = MODES[mode].fields.map((f) => f.type === "select"
+    ? `<label>${f.label}<select id="f_${f.id}">${f.opts.map(([val, txt]) =>
+        `<option value="${val}" ${val === f.v ? "selected" : ""}>${txt}</option>`).join("")}</select></label>`
+    : `<label>${f.label}<input id="f_${f.id}" type="number" min="0" step="any" value="${f.v}"></label>`
+  ).join("");
+  calculate();
+}
+
+function calculate() {
+  const m = MODES[mode];
+  const v = {};
+  m.fields.forEach((f) => { v[f.id] = parseFloat($("#f_" + f.id).value) || 0; });
+  const waste = 1 + Math.max(parseFloat($("#waste").value) || 0, 0) / 100;
+
+  const out = m.calc(v);
+  current = out.items
+    .map((i) => ({ name: i.name, unit: i.unit, qty: up(i.qty * waste, i.round) }))
+    .filter((i) => i.qty > 0);
+
+  $("#note").textContent = out.note;
+  $("#result").innerHTML = current.length
+    ? current.map((i) => `<tr><td>${i.name}</td><td><b>${i.qty.toLocaleString("en-IN")}</b> ${i.unit === "Cum" ? "m³" : i.unit}</td></tr>`).join("")
+    : `<tr><td colspan="2">Upar sizes daalo.</td></tr>`;
+  $("#postBtn").disabled = !current.length;
+}
+
+document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll("[data-mode]").forEach((x) => x.classList.toggle("is-active", x === b));
+  renderForm();
+}));
+$("#fields").addEventListener("input", calculate);
+$("#waste").addEventListener("input", calculate);
+
+$("#postBtn").addEventListener("click", () => {
+  if (!localStorage.getItem("civix_customer_token")) {
+    alert("Pehle login kar lo, phir yahan aake dobara click karo.");
+    location.href = "/customer-auth.html";
+    return;
+  }
+  sessionStorage.setItem("civix_rfq_prefill", JSON.stringify(current));
+  location.href = "/";
+});
+
+renderForm();
+</script>
+</body>
+</html>

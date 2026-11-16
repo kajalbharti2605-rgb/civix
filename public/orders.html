@@ -13,7 +13,8 @@
   .tabs{display:flex; gap:8px; overflow-x:auto; margin:0 0 18px; padding-bottom:4px;}
   .tab-chip{flex:none; background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:600; color:var(--ink-600);}
   .tab-chip.is-active{background:var(--steel-900); color:#fff; border-color:var(--steel-900);}
-  .empty{text-align:center; color:var(--ink-400); padding:60px 20px;}
+  .empty{text-align:center; color:var(--ink-400); padding:60px 20px; line-height:1.9;}
+  .empty a{color:var(--signal-orange); font-weight:700; text-decoration:none;}
 
   .order{background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow-card); margin-bottom:16px; overflow:hidden;}
   .order__head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; padding:16px 18px; border-bottom:1px solid var(--blueprint-100);}
@@ -55,9 +56,11 @@
   .timeline{list-style:none; margin:0; padding:0; font-size:12px; color:var(--ink-600);}
   .timeline li{padding:4px 0 4px 14px; border-left:2px solid var(--line); margin-left:4px;}
   .timeline b{color:var(--ink-900);}
-  .actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
   .btn--danger{background:#FEE2E2; color:#B91C1C;}
   .btn--danger:hover{background:#FECACA;}
+  .btn--quiet{background:#fff; border:1px solid var(--line); color:var(--ink-600);}
+  .btn--quiet:hover{border-color:#B91C1C; color:#B91C1C;}
 </style>
 </head>
 <body>
@@ -80,15 +83,35 @@
   <div id="orderList"><div class="empty">Loading…</div></div>
 </main>
 
+<div class="modal-overlay" id="rateOverlay" hidden>
+  <div class="modal">
+    <button class="modal__close" id="rateClose">✕</button>
+    <p class="modal__eyebrow">VERIFIED BUYER REVIEW</p>
+    <h3 class="modal__title" id="rateTitle">Rate vendor</h3>
+    <form id="rateForm">
+      <div class="star-picker" id="rateStars">
+        <span data-value="1">★</span><span data-value="2">★</span><span data-value="3">★</span><span data-value="4">★</span><span data-value="5">★</span>
+      </div>
+      <label>Comment (optional)
+        <input type="text" id="rateComment" maxlength="300" placeholder="How was the material and delivery?">
+      </label>
+      <button type="submit" class="btn btn--primary btn--block" id="rateSubmit">Submit review</button>
+    </form>
+    <div class="modal__result" id="rateResult" hidden></div>
+  </div>
+</div>
+
 <script>
 const $ = (s) => document.querySelector(s);
+const on = (s, ev, fn) => { const el = $(s); if (el) el.addEventListener(ev, fn); };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const inr = (n) => "₹" + Number(n || 0).toLocaleString("en-IN");
 const fmt = (d) => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 const mode = new URLSearchParams(location.search).get("as") === "vendor" ? "vendor" : "buyer";
+const loginUrl = mode === "vendor" ? "/vendor-login.html" : "/customer-auth.html";
 const token = localStorage.getItem(mode === "vendor" ? "civix_vendor_token" : "civix_customer_token");
-if (!token) location.href = mode === "vendor" ? "/vendor-login.html" : "/customer-auth.html";
+if (!token) location.href = loginUrl;
 
 const endpoint = mode === "vendor" ? "/api/orders/vendor" : "/api/orders/my";
 const authHeaders = { Authorization: `Bearer ${token}` };
@@ -111,21 +134,13 @@ const TABS = [
 let orders = [];
 let filter = "all";
 
+const inFilter = (o, f) => f === "all" || (f === "active" ? o.status === "confirmed" || o.status === "dispatched" : o.status === f);
 const orderNo = (o) => (o.order_no ? "CVX-" + (1000 + Number(o.order_no)) : String(o.id).slice(0, 8).toUpperCase());
 
-function matches(o) {
-  if (filter === "all") return true;
-  if (filter === "active") return o.status === "confirmed" || o.status === "dispatched";
-  return o.status === filter;
-}
-
 function renderTabs() {
-  $("#tabs").innerHTML = TABS.map((t) => {
-    const n = orders.filter((o) => {
-      const prev = filter; filter = t.key; const ok = matches(o); filter = prev; return ok;
-    }).length;
-    return `<button class="tab-chip ${filter === t.key ? "is-active" : ""}" data-tab="${t.key}">${t.label} (${n})</button>`;
-  }).join("");
+  $("#tabs").innerHTML = TABS.map((t) =>
+    `<button class="tab-chip ${filter === t.key ? "is-active" : ""}" data-tab="${t.key}">${t.label} (${orders.filter((o) => inFilter(o, t.key)).length})</button>`
+  ).join("");
 }
 
 function stepperHTML(o) {
@@ -133,8 +148,7 @@ function stepperHTML(o) {
   const idx = STEPS.indexOf(o.status);
   return `<div class="stepper">${STEPS.map((s, i) => {
     const cls = i < idx || o.status === "delivered" ? "is-done" : i === idx ? "is-current" : "";
-    const dot = cls === "is-done" ? "✓" : i + 1;
-    return `<div class="step ${cls}"><div class="step__dot">${dot}</div>${STATUS_LABEL[s]}</div>`;
+    return `<div class="step ${cls}"><div class="step__dot">${cls === "is-done" ? "✓" : i + 1}</div>${STATUS_LABEL[s]}</div>`;
   }).join("")}</div>`;
 }
 
@@ -179,7 +193,6 @@ function itemsHTML(o) {
       <td>${qi ? inr(qi.line_total) : "—"}</td>
     </tr>`;
   }).join("");
-
   return `<div class="table-wrap"><table class="items">
       <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -200,21 +213,27 @@ function timelineHTML(o) {
 }
 
 function actionsHTML(o) {
-  const b = (act, label, cls = "btn--primary") => `<button class="btn ${cls}" data-act="${act}" data-id="${esc(o.id)}">${label}</button>`;
+  const id = esc(o.id);
+  const act = (a, label, cls = "btn--primary") => `<button class="btn ${cls}" data-act="${a}" data-id="${id}">${label}</button>`;
+  const out = [];
   if (mode === "vendor") {
-    if (o.status === "confirmed") return b("dispatched", "Mark dispatched") + b("cancelled", "Cancel order", "btn--danger");
-    if (o.status === "dispatched") return b("delivered", "Mark delivered");
-    return "";
+    if (o.status === "confirmed") out.push(act("dispatched", "Mark dispatched"), act("cancelled", "Cancel order", "btn--danger"));
+    if (o.status === "dispatched") out.push(act("delivered", "Mark delivered"));
+  } else {
+    if (o.status === "confirmed") out.push(act("cancelled", "Cancel order", "btn--danger"));
+    if (o.status === "delivered") {
+      const r = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
+      out.push(r
+        ? `<span class="pill pill--delivered">You rated ★ ${esc(r.rating)}</span>`
+        : `<button class="btn btn--primary" data-rate="${id}" data-vendor="${esc(o.vendor_id)}" data-name="${esc(o.vendors?.company_name)}">⭐ Rate this vendor</button>`);
+    }
   }
-    if (o.status === "confirmed") return b("cancelled", "Cancel order", "btn--danger");
-  if (o.status === "delivered") {
-    const r = Array.isArray(o.reviews) ? o.reviews[0] : o.reviews;
-    return r
-      ? `<span class="pill pill--delivered">You rated ★ ${esc(r.rating)}</span>`
-      : `<button class="btn btn--primary" data-rate="${esc(o.id)}" data-vendor="${esc(o.vendor_id)}" data-name="${esc(o.vendors?.company_name)}">⭐ Rate this vendor</button>`;
+  if (o.status === "delivered" || o.status === "cancelled") {
+    out.push(`<button class="btn btn--quiet" data-hide="${id}">🗑 Remove from my list</button>`);
   }
-  return "";
+  return out.join("");
 }
+
 function orderHTML(o) {
   const actions = actionsHTML(o);
   return `<div class="order">
@@ -238,30 +257,57 @@ function orderHTML(o) {
   </div>`;
 }
 
-function render() {
-  renderTabs();
-  const list = orders.filter(matches);
-  $("#orderList").innerHTML = list.length
-    ? list.map(orderHTML).join("")
-    : `<div class="empty">${orders.length ? "No orders in this filter." : "No orders yet."}</div>`;
+function emptyHTML() {
+  if (orders.length) return `<div class="empty">No orders in this filter.</div>`;
+  return mode === "vendor"
+    ? `<div class="empty">Abhi koi order nahi mila.<br><a href="/vendor-quotes.html">Open requirements dekho aur quote bhejo →</a></div>`
+    : `<div class="empty">Aapne abhi tak koi order nahi diya.<br><a href="/">Requirement post karo →</a></div>`;
 }
 
+function render() {
+  renderTabs();
+  const list = orders.filter((o) => inFilter(o, filter));
+  $("#orderList").innerHTML = list.length ? list.map(orderHTML).join("") : emptyHTML();
+}
+
+let loading = true;
+const slowTimer = setTimeout(() => {
+  if (loading) $("#orderList").innerHTML = `<div class="empty">Server jaag raha hai (free hosting), 1 minute tak lag sakta hai…</div>`;
+}, 8000);
+
 async function load() {
-  const res = await fetch(endpoint, { headers: authHeaders, cache: "no-store" });
-  if (res.status === 401) { location.href = mode === "vendor" ? "/vendor-login.html" : "/customer-auth.html"; return; }
-  const data = await res.json();
-  if (!res.ok) { $("#orderList").innerHTML = `<div class="empty">${esc(data.message || "Could not load orders")}</div>`; return; }
-  orders = data.orders;
-  render();
+  try {
+    const res = await fetch(endpoint, { headers: authHeaders, cache: "no-store" });
+    if (res.status === 401) { location.href = loginUrl; return; }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Could not load orders");
+    orders = data.orders || [];
+    render();
+  } catch (err) {
+    $("#orderList").innerHTML = `<div class="empty">⚠️ ${esc(err.message)}<br><button class="btn btn--primary" onclick="location.reload()" style="margin-top:12px">Retry</button></div>`;
+  } finally {
+    loading = false;
+    clearTimeout(slowTimer);
+  }
 }
 
 document.addEventListener("click", async (e) => {
   const tab = e.target.closest("[data-tab]");
   if (tab) { filter = tab.dataset.tab; render(); return; }
 
+  const hideBtn = e.target.closest("[data-hide]");
+  if (hideBtn) {
+    if (!confirm("Is order ko apni list se hata du? Doosri party ke paas ye order dikhta rahega.")) return;
+    hideBtn.disabled = true;
+    const res = await fetch(`/api/orders/${hideBtn.dataset.hide}/hide`, { method: "PATCH", headers: authHeaders });
+    const data = await res.json();
+    if (!res.ok) { alert(data.message || "Could not remove"); hideBtn.disabled = false; return; }
+    load();
+    return;
+  }
+
   const btn = e.target.closest("[data-act]");
   if (!btn) return;
-
   const status = btn.dataset.act;
   let note = "";
   if (status === "cancelled") {
@@ -282,54 +328,32 @@ document.addEventListener("click", async (e) => {
   if (!res.ok) { alert(data.message || "Could not update"); btn.disabled = false; return; }
   load();
 });
-<div class="modal-overlay" id="rateOverlay" hidden>
-  <div class="modal">
-    <button class="modal__close" id="rateClose">✕</button>
-    <p class="modal__eyebrow">VERIFIED BUYER REVIEW</p>
-    <h3 class="modal__title" id="rateTitle">Rate vendor</h3>
-    <form id="rateForm">
-      <div class="star-picker" id="rateStars">
-        <span data-value="1">★</span><span data-value="2">★</span><span data-value="3">★</span><span data-value="4">★</span><span data-value="5">★</span>
-      </div>
-      <label>Comment (optional)
-        <input type="text" id="rateComment" maxlength="300" placeholder="How was the material and delivery?">
-      </label>
-      <button type="submit" class="btn btn--primary btn--block" id="rateSubmit">Submit review</button>
-    </form>
-    <div class="modal__result" id="rateResult" hidden></div>
-  </div>
-</div>
+
 // ---- review modal ----
 let rateCtx = null;
 let rateValue = 0;
+const stars = [...document.querySelectorAll("#rateStars span")];
+const paintStars = () => stars.forEach((s) => s.classList.toggle("is-filled", Number(s.dataset.value) <= rateValue));
+stars.forEach((s) => s.addEventListener("click", () => { rateValue = Number(s.dataset.value); paintStars(); }));
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-rate]");
   if (!btn) return;
   rateCtx = { orderId: btn.dataset.rate, vendorId: btn.dataset.vendor };
   rateValue = 0;
-  document.querySelectorAll("#rateStars span").forEach((s) => s.classList.remove("is-filled"));
+  paintStars();
   $("#rateTitle").textContent = `Rate ${btn.dataset.name}`;
   $("#rateComment").value = "";
   $("#rateResult").hidden = true;
   $("#rateOverlay").hidden = false;
 });
 
-document.querySelectorAll("#rateStars span").forEach((star) => {
-  star.addEventListener("click", () => {
-    rateValue = Number(star.dataset.value);
-    document.querySelectorAll("#rateStars span").forEach((s) =>
-      s.classList.toggle("is-filled", Number(s.dataset.value) <= rateValue));
-  });
-});
+on("#rateClose", "click", () => { $("#rateOverlay").hidden = true; });
+on("#rateOverlay", "click", (e) => { if (e.target.id === "rateOverlay") e.target.hidden = true; });
 
-$("#rateClose").addEventListener("click", () => { $("#rateOverlay").hidden = true; });
-$("#rateOverlay").addEventListener("click", (e) => { if (e.target.id === "rateOverlay") e.target.hidden = true; });
-
-$("#rateForm").addEventListener("submit", async (e) => {
+on("#rateForm", "submit", async (e) => {
   e.preventDefault();
   if (!rateValue) { alert("Please select a rating"); return; }
-
   const btn = $("#rateSubmit");
   btn.disabled = true;
   const res = await fetch(`/api/vendors/${rateCtx.vendorId}/reviews`, {
@@ -339,16 +363,16 @@ $("#rateForm").addEventListener("submit", async (e) => {
   });
   const data = await res.json();
   btn.disabled = false;
-
   const box = $("#rateResult");
   box.hidden = false;
   box.textContent = data.message || "Done";
   box.style.background = res.ok ? "" : "#FEE2E2";
   box.style.color = res.ok ? "" : "#B91C1C";
-
   if (res.ok) setTimeout(() => { $("#rateOverlay").hidden = true; load(); }, 1200);
 });
-load();
+
+if (token) load();
 </script>
+<script src="/js/notify-bell.js"></script>
 </body>
 </html>

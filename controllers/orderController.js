@@ -34,6 +34,7 @@ export const getBuyerOrders = async (req, res) => {
       .from("orders")
       .select(ORDER_SELECT)
       .eq("customer_id", req.authUserId)
+      .eq("buyer_hidden", false)
       .order("created_at", { ascending: false });
 
     if (error) return res.status(500).json({ message: error.message });
@@ -53,6 +54,7 @@ export const getVendorOrders = async (req, res) => {
       .from("orders")
       .select(ORDER_SELECT)
       .eq("vendor_id", vendor.id)
+      .eq("vendor_hidden", false)
       .order("created_at", { ascending: false });
 
     if (error) return res.status(500).json({ message: error.message });
@@ -124,6 +126,34 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     res.json({ message: `Order marked as ${status}`, order: updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const hideOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, status, customer_id, vendor_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const vendor = await getMyVendor(req.authUserId);
+    let column = null;
+    if (vendor && order.vendor_id === vendor.id) column = "vendor_hidden";
+    else if (order.customer_id === req.authUserId) column = "buyer_hidden";
+    if (!column) return res.status(403).json({ message: "This is not your order" });
+
+    if (!["delivered", "cancelled"].includes(order.status)) {
+      return res.status(400).json({ message: "Only delivered or cancelled orders can be removed from your list" });
+    }
+
+    const { error } = await supabase.from("orders").update({ [column]: true }).eq("id", id);
+    if (error) return res.status(500).json({ message: error.message });
+    res.json({ message: "Order removed from your list" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -305,7 +305,7 @@ $$("[data-footer-city]").forEach((link) => {
 });
 
 resetItems();
-loadCatalog();
+loadCatalog().then(applyPrefill);
 loadVendors();
 // ---- homepage: quick requirement + CTAs ----
 function openRfqWith(name) {
@@ -326,3 +326,20 @@ fetch("/api/vendors?city=all&category=all&search=")
   .then((r) => r.json())
   .then((d) => { const el = $("#statVendors"); if (el) el.textContent = d.count ?? 0; })
   .catch(() => {});
+
+  function applyPrefill() {
+  let items = null;
+  try { items = JSON.parse(sessionStorage.getItem("civix_rfq_prefill") || "null"); } catch (e) {}
+  if (!Array.isArray(items) || !items.length) return;
+  sessionStorage.removeItem("civix_rfq_prefill");
+
+  $("#rfqItemsList").innerHTML = items.map((_, i) => rfqRowHTML(i > 0)).join("");
+  document.querySelectorAll(".rfq-item-row").forEach((row, i) => {
+    const input = row.querySelector(".item-material");
+    input.value = items[i].name;
+    input.dispatchEvent(new Event("input", { bubbles: true })); // catalog item ho to product + unit set
+    row.querySelector(".item-qty").value = items[i].qty;
+    row.querySelector(".item-unit").value = items[i].unit;
+  });
+  openModal("rfqOverlay");
+}
