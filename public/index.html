@@ -3,143 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Civix — Construction Marketplace</title>
+<title>Civix — Construction Marketplace | Compare Quotes</title>
+<meta name="description" content="Post your requirement once and compare quotes from verified cement, TMT steel, contractor and machinery vendors in Indore, Bhopal, Jabalpur and Gwalior.">
+<meta name="theme-color" content="#121A22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar__grid"></div>
-  <div class="topbar__inner">
-    <div class="brand">
-      <span class="brand__mark">CIVIX</span>
-      <span class="brand__tag">Construction Marketplace</span>
-    </div>
-    <button class="city-pill" id="cityPillBtn">
-      <span class="city-pill__icon">📍</span>
-      <span id="currentCityLabel">All Cities</span>
-      <span class="city-pill__chevron">▾</span>
-    </button>
-    <a href="/customer-auth.html" class="btn btn--ghost-light" style="text-decoration:none; display:inline-flex; align-items:center;">Login</a>
-    <a href="/my-rfqs.html" class="btn btn--ghost-light" style="text-decoration:none; display:inline-flex; align-items:center;">My Requirements</a>
-    <button class="btn btn--ghost-light" id="becomeVendorBtn">+ List your business</button>
-  </div>
-  <div class="city-dropdown" id="cityDropdown" hidden>
-    <button class="city-dropdown__item is-active" data-city="all">All Cities</button>
-    <button class="city-dropdown__item" data-city="Indore">Indore</button>
-    <button class="city-dropdown__item" data-city="Bhopal">Bhopal</button>
-    <button class="city-dropdown__item" data-city="Jabalpur">Jabalpur</button>
-    <button class="city-dropdown__item" data-city="Gwalior">Gwalior</button>
-    <button class="city-dropdown__locate" id="locateBtn">🎯 Use my current location</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 13.7c2.6.3 4.5 2.1 4.5 5"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M5 7h14"/><path d="M5 7l-3 7a3.5 3.5 0 0 0 6 0zM19 7l-3 7a3.5 3.5 0 0 0 6 0z"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M2 6h11v10H2zM13 9h4l3 3v4h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/></symbol>
+</svg>
 
+<header class="lp-nav">
+  <div class="lp-nav__in">
+    <a href="/" class="lp-logo">CIVIX<small>Construction Marketplace</small></a>
+    <nav class="lp-links" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#shop">Categories</a>
+      <a href="#why">Why Civix</a>
+      <a href="/calculator.html">Calculator</a>
+    </nav>
+    <div class="lp-city">
+      <button class="lp-pill" id="cityPillBtn" type="button"><svg class="ic"><use href="#i-pin"/></svg><span id="currentCityLabel">All Cities</span> ▾</button>
+      <div class="city-dropdown" id="cityDropdown" hidden>
+        <button class="city-dropdown__item is-active" data-city="all">All Cities</button>
+        <button class="city-dropdown__item" data-city="Indore">Indore</button>
+        <button class="city-dropdown__item" data-city="Bhopal">Bhopal</button>
+        <button class="city-dropdown__item" data-city="Jabalpur">Jabalpur</button>
+        <button class="city-dropdown__item" data-city="Gwalior">Gwalior</button>
+        <button class="city-dropdown__locate" id="locateBtn">Use my current location</button>
+      </div>
+    </div>
+    <a class="lp-btn lp-btn--ghost" id="navLogin" href="/customer-auth.html">Login</a>
+    <button class="lp-btn lp-btn--ghost lp-hide-sm" id="becomeVendorBtn" type="button">Register as Seller</button>
+    <button class="lp-btn lp-btn--solid" type="button" data-post>Start Buying</button>
   </div>
 </header>
 
-<section class="hero">
-  <div class="hero__stripe"></div>
-  <div class="hero__inner hero__inner--wide">
-    <div class="hero__copy">
-      <p class="hero__eyebrow">CEMENT · TMT STEEL · CONTRACTORS · MACHINERY</p>
-      <h1 class="hero__title">Post your requirement. <span>Compare vendor quotes.</span> Order at the best rate.</h1>
-      <p class="hero__sub">Madhya Pradesh ke verified suppliers aur contractors se seedha rate lo. Bina chakkar, bina bargaining.</p>
-      <div class="hero__cta">
-        <button class="btn btn--primary btn--lg" id="heroPostBtn">Post requirement — free</button>
-        <a class="btn btn--ghost-light btn--lg" href="#directory">Browse vendors</a>
+<section class="lp-hero">
+  <div class="lp-hero__in">
+    <div>
+      <span class="lp-eyebrow">CEMENT · STEEL · CONTRACTORS · MACHINERY</span>
+      <h1>Post once. Compare quotes. <em>Build for less.</em></h1>
+      <p>Civix connects site owners and contractors across Madhya Pradesh with verified suppliers, contractors and machinery rentals. Vendors send their best rate, you compare and order.</p>
+      <div class="lp-cta">
+        <button class="lp-btn lp-btn--solid lp-btn--lg" type="button" data-post>Post requirement →</button>
+        <a class="lp-btn lp-btn--line lp-btn--lg" href="#directory">Browse vendors</a>
       </div>
-      <div class="searchbar">
-        <span class="searchbar__icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search cement, TMT steel, contractors, JCB…">
+      <div class="lp-quick">
+        <span>Popular:</span>
+        <button type="button" data-quick="OPC 53 Grade Cement">OPC 53 Cement</button>
+        <button type="button" data-quick="TMT Bars Fe500D 12mm">TMT 12mm</button>
+        <button type="button" data-quick="JCB / Backhoe Loader">JCB rental</button>
+        <button type="button" data-quick="PVC Pipes">PVC pipes</button>
       </div>
+      <ul class="lp-chips"><li>Multiple quotes</li><li>Verified vendors</li><li>Order tracking</li><li>Free for buyers</li></ul>
+      <div class="lp-live"><b id="statVendors">—</b> vendors listed · 4 cities · 5 categories</div>
     </div>
-    <aside class="hero__panel">
-      <p class="panel__title">POPULAR REQUIREMENTS</p>
-      <div class="quick-grid">
-        <button data-quick="OPC 53 Grade Cement">🏭 OPC 53 Cement</button>
-        <button data-quick="TMT Bars Fe500D 12mm">⛓️ TMT 12mm</button>
-        <button data-quick="JCB / Backhoe Loader">🚜 JCB rental</button>
-        <button data-quick="Civil Contractor (labour + material)">👷 Civil contractor</button>
-        <button data-quick="PVC Pipes">🔧 PVC pipes</button>
-        <button data-quick="Concrete Mixer">🚜 Concrete mixer</button>
-      </div>
-      <div class="panel__stats">
-        <div><b id="statVendors">—</b><span>Vendors</span></div>
-        <div><b>4</b><span>Cities</span></div>
-        <div><b>5</b><span>Categories</span></div>
-      </div>
-    </aside>
+    <div class="lp-collage">
+      <div class="lp-ph lp-ph--a"><img src="/img/hero-1.jpg" alt="Construction site" onerror="this.remove()"></div>
+      <div class="lp-ph lp-ph--b"><img src="/img/hero-2.jpg" alt="TMT steel bars" onerror="this.remove()"></div>
+      <div class="lp-ph lp-ph--c"><img src="/img/hero-3.jpg" alt="Cement bags" onerror="this.remove()"></div>
+    </div>
   </div>
 </section>
 
-<nav class="categories" id="categories">
-  <button class="chip is-active" data-category="all"><span>🏗️</span>All</button>
-  <button class="chip" data-category="cement"><span>🏭</span>Cement</button>
-  <button class="chip" data-category="tmt_steel"><span>⛓️</span>TMT Steel</button>
-  <button class="chip" data-category="contractors"><span>👷</span>Contractors</button>
-  <button class="chip" data-category="machinery"><span>🚜</span>Machinery</button>
-  <button class="chip" data-category="plumbing_electrical"><span>🔧</span>Plumbing/Electrical</button>
-</nav>
-
-<main class="results" id="directory">
-  <div class="results__head">
-    <h2 id="resultsTitle">All vendors</h2>
-    <span class="results__count" id="resultsCount"></span>
+<section class="lp-sec" id="how"><div class="lp-wrap">
+  <h2 class="lp-h2">How Civix works</h2>
+  <p class="lp-sub">From requirement to delivery in four simple steps.</p>
+  <div class="lp-steps">
+    <div class="lp-step"><div class="lp-step__ic"><svg class="ic"><use href="#i-file"/></svg><b>1</b></div><h3>Post requirement</h3><p>Tell us the items, quantity and site location.</p></div>
+    <div class="lp-step"><div class="lp-step__ic"><svg class="ic"><use href="#i-users"/></svg><b>2</b></div><h3>Receive quotes</h3><p>Vendors in your city send rate, brand and delivery time.</p></div>
+    <div class="lp-step"><div class="lp-step__ic"><svg class="ic"><use href="#i-scale"/></svg><b>3</b></div><h3>Compare &amp; decide</h3><p>See every quote side by side and pick the best one.</p></div>
+    <div class="lp-step"><div class="lp-step__ic"><svg class="ic"><use href="#i-truck"/></svg><b>4</b></div><h3>Order &amp; track</h3><p>Accept a quote and follow the order to delivery.</p></div>
   </div>
+</div></section>
+
+<section class="lp-sec lp-sec--tint" id="shop"><div class="lp-wrap">
+  <h2 class="lp-h2">Shop by category</h2>
+  <p class="lp-sub">Materials, contractors and machinery, all in one place.</p>
+  <div class="lp-cats">
+    <a class="lp-cat" href="/category.html?c=cement"><div class="lp-cat__ph"><img src="/img/cat-cement.jpg" alt="" onerror="this.remove()"></div>Cement<small>View vendors →</small></a>
+    <a class="lp-cat" href="/category.html?c=tmt_steel"><div class="lp-cat__ph"><img src="/img/cat-steel.jpg" alt="" onerror="this.remove()"></div>TMT Steel<small>View vendors →</small></a>
+    <a class="lp-cat" href="/category.html?c=contractors"><div class="lp-cat__ph"><img src="/img/cat-contractors.jpg" alt="" onerror="this.remove()"></div>Contractors<small>View vendors →</small></a>
+    <a class="lp-cat" href="/category.html?c=machinery"><div class="lp-cat__ph"><img src="/img/cat-machinery.jpg" alt="" onerror="this.remove()"></div>Machinery<small>View vendors →</small></a>
+    <a class="lp-cat" href="/category.html?c=plumbing_electrical"><div class="lp-cat__ph"><img src="/img/cat-plumbing.jpg" alt="" onerror="this.remove()"></div>Plumbing &amp; Electrical<small>View vendors →</small></a>
+    <a class="lp-cat lp-cat--all" href="/category.html?c=all">View all →</a>
+  </div>
+</div></section>
+
+<section class="lp-sec" id="why"><div class="lp-wrap">
+  <h2 class="lp-h2">Why builders choose Civix</h2>
+  <p class="lp-sub">Better rates, clear comparison and a tracked delivery.</p>
+  <div class="lp-why">
+    <div class="lp-card"><i><svg class="ic"><use href="#i-users"/></svg></i><h3>Multiple quotes</h3><p>One requirement reaches every matching vendor in your city, so you get competing rates.</p></div>
+    <div class="lp-card"><i><svg class="ic"><use href="#i-scale"/></svg></i><h3>Easy comparison</h3><p>Rate, brand, delivery days and charges side by side, with LOWEST and BEST VALUE tags.</p></div>
+    <div class="lp-card"><i><svg class="ic"><use href="#i-shield"/></svg></i><h3>Verified vendors</h3><p>Every vendor is admin-approved before listing, and verified ones get a blue tick.</p></div>
+    <div class="lp-card"><i><svg class="ic"><use href="#i-box"/></svg></i><h3>Order tracking</h3><p>Follow each order from Confirmed to Delivered with a clear timeline.</p></div>
+    <div class="lp-card"><i><svg class="ic"><use href="#i-pin"/></svg></i><h3>City-wise</h3><p>Vendors from Indore, Bhopal, Jabalpur and Gwalior, close to your site.</p></div>
+    <div class="lp-card"><i><svg class="ic"><use href="#i-star"/></svg></i><h3>Honest reviews</h3><p>Only buyers with a delivered order can review a vendor.</p></div>
+  </div>
+</div></section>
+
+<section class="lp-sec lp-sec--tint" id="directory"><div class="lp-wrap">
+  <h2 class="lp-h2">Find vendors near you</h2>
+  <p class="lp-sub">Search, filter by category and contact vendors directly.</p>
+  <div class="lp-search"><svg class="ic"><use href="#i-pin"/></svg><input type="text" id="searchInput" placeholder="Search cement, TMT steel, contractors, JCB…"></div>
+  <nav class="categories" id="categories">
+    <button class="chip is-active" data-category="all">All</button>
+    <button class="chip" data-category="cement">Cement</button>
+    <button class="chip" data-category="tmt_steel">TMT Steel</button>
+    <button class="chip" data-category="contractors">Contractors</button>
+    <button class="chip" data-category="machinery">Machinery</button>
+    <button class="chip" data-category="plumbing_electrical">Plumbing/Electrical</button>
+  </nav>
+  <div class="results__head"><h3 id="resultsTitle">All vendors</h3><span class="results__count" id="resultsCount"></span></div>
   <div class="vendor-grid" id="vendorGrid"></div>
   <div class="empty-state" id="emptyState" hidden>
     <p>No vendors match that yet.</p>
-    <span>Post your requirement below — nearby suppliers will be notified.</span>
+    <span>Post your requirement and nearby vendors can quote.</span>
   </div>
-</main>
-<section class="band">
-  <div class="band__inner">
-    <p class="band__eyebrow">HOW IT WORKS</p>
-    <h2 class="band__title">Requirement se delivery tak, 4 steps me</h2>
-    <div class="steps4">
-      <div class="s4"><span class="s4__no">01</span><h3>Post requirement</h3><p>Item, quantity aur site location batao. Free hai.</p></div>
-      <div class="s4"><span class="s4__no">02</span><h3>Vendors quote bhejte hain</h3><p>Aapki city ke verified vendors apna rate, brand aur delivery time bhejte hain.</p></div>
-      <div class="s4"><span class="s4__no">03</span><h3>Compare karo</h3><p>Side-by-side table me sabse sasta rate (LOWEST) turant dikhta hai.</p></div>
-      <div class="s4"><span class="s4__no">04</span><h3>Order aur track karo</h3><p>Quote accept karo, order ka status Confirmed se Delivered tak track karo.</p></div>
-    </div>
-  </div>
-</section>
+</div></section>
 
-<section class="band band--tint">
-  <div class="band__inner">
-    <p class="band__eyebrow">WHY CIVIX</p>
-    <h2 class="band__title">Local vendors, seedha rate</h2>
-    <div class="why4">
-      <div class="why"><div class="why__icon">✔️</div><h3>Verified vendors</h3><p>Har vendor admin approval ke baad hi list hota hai, aur blue tick verified ko milta hai.</p></div>
-      <div class="why"><div class="why__icon">🏗️</div><h3>Sab ek jagah</h3><p>Material, contractors aur machinery rental, teeno ek hi platform pe.</p></div>
-      <div class="why"><div class="why__icon">📍</div><h3>City-wise</h3><p>Indore, Bhopal, Jabalpur, Gwalior ke vendors, aapke site ke paas.</p></div>
-      <div class="why"><div class="why__icon">⭐</div><h3>Sachche reviews</h3><p>Review sirf wahi de sakta hai jiska order deliver ho chuka ho.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="band band--dark">
-  <div class="band__inner cta-band">
+<section class="lp-sec"><div class="lp-wrap">
+  <div class="lp-cta-band">
     <div>
-      <h2>Vendor ho? Naye orders pao.</h2>
-      <p>Apna business Civix pe list karo, apni city ke customers ki requirements dekho aur seedha quote bhejo.</p>
+      <h2>Ready to build smarter?</h2>
+      <p>Post your requirement and get quotes from vendors in your city. Selling materials or services? Register and start receiving requirements.</p>
     </div>
-    <button class="btn btn--primary btn--lg" id="ctaListBtn">List your business</button>
+    <div class="lp-cta">
+      <button class="lp-btn lp-btn--solid lp-btn--lg" type="button" data-post>Post requirement</button>
+      <button class="lp-btn lp-btn--white lp-btn--lg" type="button" data-list>Register as Seller</button>
+    </div>
   </div>
-</section>
+</div></section>
 
-<section class="band">
-  <div class="band__inner faq">
-    <p class="band__eyebrow">FAQ</p>
-    <h2 class="band__title">Aksar pooche jaane wale sawaal</h2>
-    <details><summary>Kya requirement post karna free hai?</summary><p>Haan, buyers ke liye requirement post karna aur quotes dekhna free hai.</p></details>
-    <details><summary>Kaun se shehron me Civix chalta hai?</summary><p>Abhi Indore, Bhopal, Jabalpur aur Gwalior me.</p></details>
-    <details><summary>Vendor verified kaise hota hai?</summary><p>Admin vendor ki details check karke approve karta hai, aur verified vendors ko blue tick milta hai.</p></details>
-    <details><summary>Payment kaise hota hai?</summary><p>Abhi platform pe online payment nahi hai. Payment aur delivery ki baat order accept hone ke baad vendor se seedha tay hoti hai.</p></details>
-  </div>
-</section>
+<section class="lp-sec lp-sec--tint"><div class="lp-wrap lp-faq">
+  <h2 class="lp-h2">Frequently asked questions</h2>
+  <p class="lp-sub">Quick answers before you start.</p>
+  <details><summary>Is posting a requirement free?</summary><p>Yes. Buyers can post requirements and view quotes for free.</p></details>
+  <details><summary>Which cities does Civix cover?</summary><p>Currently Indore, Bhopal, Jabalpur and Gwalior.</p></details>
+  <details><summary>How does a vendor get verified?</summary><p>Our admin reviews each vendor before approval, and verified vendors get a blue tick.</p></details>
+  <details><summary>How is payment handled?</summary><p>There is no online payment on the platform yet. Payment and delivery are agreed directly with the vendor after you accept a quote.</p></details>
+</div></section>
 
-<button class="fab" id="postNeedFab"><span class="fab__plus">+</span> Post Site Need</button>
+<button class="fab" id="postNeedFab" type="button"><span class="fab__plus">+</span> Post Site Need</button>
 
 <div class="modal-overlay" id="rfqOverlay" hidden>
   <div class="modal">
@@ -203,11 +220,11 @@
       </label>
       <label>Category
         <select name="category" required>
-          <option value="cement">🏭 Cement</option>
-          <option value="tmt_steel">⛓️ TMT Steel</option>
-          <option value="contractors">👷 Contractors</option>
-          <option value="machinery">🚜 Machinery</option>
-          <option value="plumbing_electrical">🔧 Plumbing/Electrical</option>
+          <option value="cement">Cement</option>
+          <option value="tmt_steel">TMT Steel</option>
+          <option value="contractors">Contractors</option>
+          <option value="machinery">Machinery</option>
+          <option value="plumbing_electrical">Plumbing/Electrical</option>
         </select>
       </label>
       <label>City
@@ -227,6 +244,7 @@
   </div>
 </div>
 
+<!-- Hidden rehta hai. Purane main.js ke review code ko iski zaroorat hoti hai, isliye hataya nahi. -->
 <div class="modal-overlay" id="reviewOverlay" hidden>
   <div class="modal">
     <button class="modal__close" data-close="reviewOverlay">✕</button>
@@ -234,25 +252,15 @@
     <h3 class="modal__title" id="reviewVendorName">Leave a review</h3>
     <form id="reviewForm">
       <input type="hidden" id="reviewVendorId">
-      <label>Your name
-        <input type="text" name="customer_name" required>
-      </label>
-      <label>Your phone
-        <input type="tel" name="customer_phone" pattern="[0-9]{10}" required>
-      </label>
+      <label>Your name <input type="text" name="customer_name" required></label>
+      <label>Your phone <input type="tel" name="customer_phone" pattern="[0-9]{10}" required></label>
       <label>Rating
         <div class="star-picker" id="starPicker">
-          <span data-value="1">★</span>
-          <span data-value="2">★</span>
-          <span data-value="3">★</span>
-          <span data-value="4">★</span>
-          <span data-value="5">★</span>
+          <span data-value="1">★</span><span data-value="2">★</span><span data-value="3">★</span><span data-value="4">★</span><span data-value="5">★</span>
         </div>
         <input type="hidden" name="rating" id="ratingInput" required>
       </label>
-      <label>Comment (optional)
-        <input type="text" name="comment" placeholder="How was your experience?">
-      </label>
+      <label>Comment (optional) <input type="text" name="comment" placeholder="How was your experience?"></label>
       <button type="submit" class="btn btn--primary btn--block">Submit Review</button>
     </form>
     <div class="modal__result" id="reviewResult" hidden></div>
@@ -266,18 +274,13 @@
       <div class="footer__col footer__col--brand">
         <div class="footer__brand">CIVIX</div>
         <p class="footer__tagline">Everything for your construction site, sourced nearby. Connecting builders with verified suppliers, contractors and machinery rentals across Madhya Pradesh.</p>
-        <div class="footer__social">
-          <a href="#" aria-label="Facebook">f</a>
-          <a href="#" aria-label="Instagram">◎</a>
-          <a href="#" aria-label="Twitter">𝕏</a>
-          <a href="#" aria-label="LinkedIn">in</a>
-        </div>
       </div>
 
       <div class="footer__col">
         <h4>Explore</h4>
         <a href="/">Home</a>
-        <a href="/#categories">Categories</a>
+        <a href="/#shop">Categories</a>
+        <a href="/calculator.html">Material Calculator</a>
         <a href="/customer-auth.html">Customer Login</a>
         <a href="/my-rfqs.html">My Requirements</a>
         <a href="/orders.html?as=buyer">My Orders</a>
@@ -285,7 +288,7 @@
 
       <div class="footer__col">
         <h4>For Vendors</h4>
-        <a href="#" id="footerListBusiness">List your business</a>
+        <a href="#" id="footerListBusiness">Register as Seller</a>
         <a href="/vendor-login.html">Vendor Login</a>
         <a href="/vendor-dashboard.html">Vendor Dashboard</a>
       </div>
@@ -300,9 +303,9 @@
 
       <div class="footer__col">
         <h4>Contact</h4>
-        <p class="footer__contact">📍 Indore, Madhya Pradesh</p>
-        <p class="footer__contact">📞 <a href="tel:+911234567890">+91 12345 67890</a></p>
-        <p class="footer__contact">✉️ <a href="mailto:support@civix.com">support@civix.com</a></p>
+        <p class="footer__contact">Indore, Madhya Pradesh</p>
+        <p class="footer__contact"><a href="tel:+911234567890">+91 12345 67890</a></p>
+        <p class="footer__contact"><a href="mailto:support@civix.com">support@civix.com</a></p>
       </div>
     </div>
 
@@ -317,5 +320,6 @@
 </footer>
 
 <script src="/js/main.js"></script>
+<script src="/js/notify-bell.js"></script>
 </body>
 </html>

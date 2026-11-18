@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Civix — Vendors</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .cat-hero{position:relative; background:var(--steel-900) center/cover no-repeat; color:#fff;}
+  .cat-hero::before{content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(18,26,34,.93),rgba(18,26,34,.55));}
+  .cat-hero__in{position:relative; max-width:1180px; margin:0 auto; padding:46px 20px;}
+  .crumbs{font-size:13px; color:#B8C4CF; margin-bottom:10px;}
+  .crumbs a{color:#fff; text-decoration:none;}
+  .cat-hero h1{font-family:'Oswald',sans-serif; font-size:clamp(28px,4.5vw,44px); margin:0 0 8px;}
+  .cat-hero p{margin:0 0 20px; color:#D5DDE5; max-width:540px; font-size:15px; line-height:1.6;}
+  .cat-tools{max-width:1180px; margin:0 auto; padding:20px 20px 0; display:flex; gap:10px; flex-wrap:wrap;}
+  .cat-tools select, .cat-tools input{border:1px solid var(--line); border-radius:10px; padding:11px 12px; font-size:14px; background:#fff; font-family:inherit;}
+  .cat-tools input{flex:1; min-width:200px;}
+  .cat-main{max-width:1180px; margin:0 auto; padding:18px 20px 70px;}
+  .items-row{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 6px;}
+  .items-row a{background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:600; color:var(--ink-600); text-decoration:none;}
+  .items-row a:hover{border-color:var(--signal-orange); color:var(--signal-orange-dark);}
+  .lbl{font-size:12px; letter-spacing:.1em; color:var(--ink-400); font-weight:700; margin:14px 0 8px;}
+</style>
+</head>
+<body>
+
+<header class="lp-nav">
+  <div class="lp-nav__in">
+    <a href="/" class="lp-logo">CIVIX<small>Construction Marketplace</small></a>
+    <a class="lp-btn lp-btn--ghost" href="/">← Home</a>
+    <a class="lp-btn lp-btn--solid" href="/?post=1">Post requirement</a>
+  </div>
+</header>
+
+<section class="cat-hero" id="hero">
+  <div class="cat-hero__in">
+    <div class="crumbs"><a href="/">Home</a> / <span id="crumb">Vendors</span></div>
+    <h1 id="title">Vendors</h1>
+    <p id="tag"></p>
+    <a class="lp-btn lp-btn--solid lp-btn--lg" id="postBtn" href="/?post=1">Get quotes from vendors →</a>
+  </div>
+</section>
+
+<div class="cat-tools">
+  <select id="city">
+    <option value="all">All cities</option>
+    <option>Indore</option><option>Bhopal</option><option>Jabalpur</option><option>Gwalior</option>
+  </select>
+  <input id="q" type="text" placeholder="Search by company or material…">
+</div>
+
+<main class="cat-main">
+  <div id="itemsWrap" hidden>
+    <div class="lbl">POPULAR ITEMS</div>
+    <div class="items-row" id="items"></div>
+  </div>
+  <div class="results__head" style="margin-top:18px"><h3 id="count">Vendors</h3></div>
+  <div class="vendor-grid" id="grid"></div>
+  <div class="empty-state" id="empty" hidden>
+    <p>No vendors here yet.</p>
+    <span>Post your requirement and vendors can quote when they join.</span>
+  </div>
+</main>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+  const CATS = {
+    all: { title: "All vendors", tag: "Every approved vendor on Civix, across materials, contractors and machinery.", img: "/img/hero-1.jpg" },
+    cement: { title: "Cement", tag: "OPC, PPC and white cement from verified dealers.", img: "/img/cat-cement.jpg" },
+    tmt_steel: { title: "TMT Steel", tag: "Fe500D bars and binding wire from trusted traders.", img: "/img/cat-steel.jpg" },
+    contractors: { title: "Contractors", tag: "Civil, finishing and labour contractors for your site.", img: "/img/cat-contractors.jpg" },
+    machinery: { title: "Machinery", tag: "JCB, excavators, mixers and cranes on rent.", img: "/img/cat-machinery.jpg" },
+    plumbing_electrical: { title: "Plumbing & Electrical", tag: "Pipes, wires, fittings and technicians.", img: "/img/cat-plumbing.jpg" },
+  };
+
+  const params = new URLSearchParams(location.search);
+  const key = params.get("c") || "all";
+  const meta = CATS[key];
+  if (!meta) { location.replace("/"); return; }
+
+  document.title = `${meta.title} vendors — Civix`;
+  $("#title").textContent = meta.title;
+  $("#crumb").textContent = meta.title;
+  $("#tag").textContent = meta.tag;
+  $("#hero").style.backgroundImage = `url('${meta.img}')`;
+  const cityParam = params.get("city");
+  if (cityParam) $("#city").value = cityParam;
+
+  const initials = (n) => esc(String(n).split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase());
+
+  function card(v) {
+    const wa = `https://wa.me/91${v.phone}?text=${encodeURIComponent(`Hi ${v.company_name}, I found your listing on Civix.`)}`;
+    return `
+    <article class="vendor-card" style="cursor:pointer" onclick="if(!event.target.closest('a')) location.href='/vendor.html?id=${esc(v.id)}'">
+      <div class="vendor-card__banner"></div>
+      <div class="vendor-card__body">
+        <div class="vendor-card__top">
+          ${v.logo_url ? `<img class="vendor-card__avatar" src="${esc(v.logo_url)}" alt="">` : `<div class="vendor-card__avatar">${initials(v.company_name)}</div>`}
+          <div class="vendor-card__title-wrap">
+            <p class="vendor-card__name">${esc(v.company_name)} ${v.is_verified ? '<span class="verified-badge" title="Verified">✔</span>' : ""}</p>
+            <p class="vendor-card__meta">${esc(v.role)} • ${esc(v.city)}</p>
+          </div>
+          <span class="rating"><span class="rating__star">★</span>${Number(v.rating).toFixed(1)}</span>
+        </div>
+        ${v.materials ? `<div class="vendor-card__materials">${esc(v.materials)}</div>` : ""}
+        <div class="vendor-card__actions">
+          <a class="action-btn action-btn--call" href="tel:+91${esc(v.phone)}">📞 Call</a>
+          <a class="action-btn action-btn--whatsapp" target="_blank" rel="noopener" href="${wa}">💬 WhatsApp</a>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  async function load() {
+    $("#grid").innerHTML = '<div class="skeleton-card"><div class="skeleton-line" style="width:60%"></div><div class="skeleton-line" style="width:100%;height:36px"></div></div>'.repeat(3);
+    const q = new URLSearchParams({ city: $("#city").value, category: key, search: $("#q").value.trim() });
+    try {
+      const res = await fetch(`/api/vendors?${q}`);
+      const data = await res.json();
+      const list = data.vendors || [];
+      $("#grid").innerHTML = list.map(card).join("");
+      $("#empty").hidden = list.length > 0;
+      $("#count").textContent = `${list.length} vendor${list.length === 1 ? "" : "s"}`;
+    } catch (e) {
+      $("#grid").innerHTML = "";
+      $("#count").textContent = "Could not load vendors. Please retry.";
+    }
+  }
+
+  fetch("/api/catalog").then((r) => r.json()).then((d) => {
+    const items = (d.products || []).filter((p) => key === "all" || p.category === key).slice(0, 10);
+    if (!items.length) return;
+    $("#items").innerHTML = items.map((p) => `<a href="/?post=1&item=${encodeURIComponent(p.name)}">${esc(p.name)} · Get quote</a>`).join("");
+    $("#itemsWrap").hidden = false;
+  }).catch(() => {});
+
+  let t;
+  $("#q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 250); });
+  $("#city").addEventListener("change", load);
+  load();
+})();
+</script>
+</body>
+</html>

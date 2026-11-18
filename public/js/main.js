@@ -318,10 +318,41 @@ function openRfqWith(name) {
   row.querySelector(".item-qty").focus();
 }
 
-$("#heroPostBtn")?.addEventListener("click", () => { resetItems(); openModal("rfqOverlay"); });
-$("#ctaListBtn")?.addEventListener("click", () => openModal("vendorOverlay"));
-$$("[data-quick]").forEach((b) => b.addEventListener("click", () => openRfqWith(b.dataset.quick)));
+// ===== LANDING GLUE =====
+(function () {
+  $$("[data-post]").forEach((b) => b.addEventListener("click", () => { resetItems(); openModal("rfqOverlay"); }));
+  $$("[data-list]").forEach((b) => b.addEventListener("click", () => openModal("vendorOverlay")));
 
+  function prefillItem(name) {
+    resetItems();
+    const input = document.querySelector(".rfq-item-row .item-material");
+    input.value = name;
+    input.dispatchEvent(new Event("input", { bubbles: true })); // catalog item ho to unit apne aap set
+    openModal("rfqOverlay");
+    const qty = document.querySelector(".rfq-item-row .item-qty");
+    if (qty) qty.focus();
+  }
+  $$("[data-quick]").forEach((b) => b.addEventListener("click", () => prefillItem(b.dataset.quick)));
+
+  if (localStorage.getItem("civix_customer_token")) {
+    const l = $("#navLogin");
+    if (l) { l.textContent = "My Orders"; l.href = "/orders.html?as=buyer"; }
+  }
+
+  fetch("/api/vendors?city=all&category=all&search=")
+    .then((r) => r.json())
+    .then((d) => { const el = $("#statVendors"); if (el) el.textContent = d.count ?? 0; })
+    .catch(() => {});
+
+  const p = new URLSearchParams(location.search);
+  if (p.get("post")) {
+    loadCatalog().then(() => {
+      const item = p.get("item");
+      if (item) prefillItem(item);
+      else { resetItems(); openModal("rfqOverlay"); }
+    });
+  }
+})();
 fetch("/api/vendors?city=all&category=all&search=")
   .then((r) => r.json())
   .then((d) => { const el = $("#statVendors"); if (el) el.textContent = d.count ?? 0; })
@@ -343,3 +374,18 @@ fetch("/api/vendors?city=all&category=all&search=")
   });
   openModal("rfqOverlay");
 }
+// ---- /?post=1&item=... se RFQ form kholna (category page se) ----
+(function () {
+  const p = new URLSearchParams(location.search);
+  if (!p.get("post")) return;
+  loadCatalog().then(() => {
+    resetItems();
+    const item = p.get("item");
+    if (item) {
+      const input = document.querySelector(".rfq-item-row .item-material");
+      input.value = item;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    openModal("rfqOverlay");
+  });
+})();
